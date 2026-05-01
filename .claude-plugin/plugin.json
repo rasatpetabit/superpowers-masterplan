@@ -23,23 +23,5 @@
     "worktrees",
     "automation",
     "agent"
-  ],
-  "dependencies": {
-    "required": [
-      {
-        "name": "superpowers",
-        "reason": "/superflow delegates to superpowers:brainstorming, writing-plans, subagent-driven-development, executing-plans, using-git-worktrees, systematic-debugging, finishing-a-development-branch"
-      }
-    ],
-    "optional": [
-      {
-        "name": "codex",
-        "reason": "Required only if codex_routing is set to auto or manual; provides codex:codex-rescue subagent"
-      },
-      {
-        "name": "context7-mcp",
-        "reason": "Used by the CD-4 ladder for library documentation lookups during blocker resolution"
-      }
-    ]
-  }
+  ]
 }
