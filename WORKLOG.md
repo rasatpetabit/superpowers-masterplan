@@ -179,6 +179,22 @@ Pre-v2.0.0 entries were pruned in the v2.0.0 release; institutional knowledge fr
 
 ---
 
+## 2026-05-04 — pre-public-release branch + worktree cleanup
+
+**Scope:** Deleted both stray feature branches and the worktrees holding them, leaving only `main` locally and on origin.
+
+**Changes:**
+
+- Removed `feat/simplify-code-and-docs` (fully merged into main): worktree at `.worktrees/simplify-code-and-docs` removed via `git worktree remove`; branch deleted local + origin.
+- Removed `feat/codex-persona-integration` (18 unmerged commits of pre-rename `superflow-persona` exploratory work, abandoned in favor of the v2.0.0 Codex defaults-on direction): registered worktree at `/home/ras/dev/claude-superflow/.worktrees/codex-persona-integration` was already prunable (parent dir gone post-rename) — pruned via `git worktree prune`. Orphan checkout dir at `.worktrees/codex-persona-integration` (not in `git worktree list`, leftover from before the rename) deleted via `find -depth -delete`. Branch hard-deleted local-only (never had a remote ref).
+- Confirmed v2.2.0 tag was already on origin; earlier impression that it was unpushed came from a truncated `tail -10` of the tag list.
+
+**Why:** Pre-public-release tidy-up. Stray branches and an orphan worktree dir would confuse contributors browsing the GitHub repo or running `git worktree list` locally on a fresh clone. Reflog retains the deleted SHAs ~90 days if the codex-persona thread ever needs salvaging.
+
+**Verification:** `git branch -a` shows only `main` + `origin/main`/`origin/HEAD`. `git worktree list` shows the single main worktree. `git ls-remote origin` shows only `refs/heads/main` and the four version tags. Working tree clean. `bash -n hooks/masterplan-telemetry.sh` and JSON validation of `.claude-plugin/plugin.json` both pass. Pre-rename grep audit (`claude-superflow|/superflow`) returns only the meta-references in WORKLOG.md describing the audit pattern itself, per the v2.2.0 verification spec.
+
+---
+
 ## 2026-05-04 — Step M loop-safety guardrail
 
 **Scope:** One-paragraph addition to Step M's Notes after observing a remote-control session where the model routed to Step M correctly but skipped surfacing the Tier-1 `AskUserQuestion` picker, instead pitching an unrelated browser-visualization feature and ending with a free-text "Want to try it?" — fatal in `/loop` and remote sessions where no human types between turns.
