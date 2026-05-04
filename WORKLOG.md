@@ -176,3 +176,13 @@ Pre-v2.0.0 entries were pruned in the v2.0.0 release; institutional knowledge fr
 - Updated this handoff plus CHANGELOG Unreleased so the docs cleanup and audit findings are durable.
 
 **Verification:** Run README structure/stale-reference checks, local-link existence checks, doctor-check table count, `git diff --check`, hook `bash -n`, and JSON validation before commit.
+
+---
+
+## 2026-05-04 — Step M loop-safety guardrail
+
+**Scope:** One-paragraph addition to Step M's Notes after observing a remote-control session where the model routed to Step M correctly but skipped surfacing the Tier-1 `AskUserQuestion` picker, instead pitching an unrelated browser-visualization feature and ending with a free-text "Want to try it?" — fatal in `/loop` and remote sessions where no human types between turns.
+
+**Why:** The script already says "surface AskUserQuestion(...)" but didn't explicitly forbid prose tangents around it. The new "Stay on script." note makes the prohibition explicit: the picker IS the user-facing surface; no adjacent feature upsells; any `?` outside an `AskUserQuestion` is a bug. Complements the global `feedback_use_askuserquestion_consistently.md` rule with the loop-fatal-interaction angle.
+
+**Verification:** `grep -n "Stay on script" commands/masterplan.md` confirms the note landed at Step M's Notes (line 292). No other steps changed; verb routing table and Step 0 logic untouched.
