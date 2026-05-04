@@ -1,7 +1,7 @@
 {
   "name": "claude-superflow",
-  "version": "0.2.2",
-  "description": "Brainstorm → plan → execute development workflow for Claude Code, designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint, Codex routing, self-paced loops.",
+  "version": "1.0.0",
+  "description": "Brainstorm → plan → execute development workflow for Claude Code with explicit phase + operation verbs (new / brainstorm / plan / execute / retro / import / doctor / status), designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint, Codex routing, self-paced loops.",
   "author": {
     "name": "Richard A Steenbergen",
     "email": "ras@petabitscale.com"
