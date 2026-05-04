@@ -325,3 +325,71 @@ and auto-installed one dependency (`superpowers`).
 **Why:** The script already says "surface AskUserQuestion(...)" but didn't explicitly forbid prose tangents around it. The new "Stay on script." note makes the prohibition explicit: the picker IS the user-facing surface; no adjacent feature upsells; any `?` outside an `AskUserQuestion` is a bug. Complements the global `feedback_use_askuserquestion_consistently.md` rule with the loop-fatal-interaction angle.
 
 **Verification:** `grep -n "Stay on script" commands/masterplan.md` confirms the note landed at Step M's Notes (line 292). No other steps changed; verb routing table and Step 0 logic untouched.
+
+---
+
+## 2026-05-04 — v2.3.0 — model-dispatch contract + per-subagent telemetry layer
+
+**Scope:** Two threads bundled into one minor release.
+
+1. **Cost-leak fix.** Every `Agent` tool dispatch site in `commands/masterplan.md` now structurally requires a `model:` parameter; previously the dispatch model was prose-only ("dispatch parallel Haiku agents") and the orchestrator-Claude (Opus 4.7) emitted Agent calls without `model:`, so spawned subagents inherited Opus silently.
+2. **Per-subagent observability.** Stop hook now captures one record per Agent dispatch into `<plan>-subagents.jsonl`, with full token breakdown (`input/output/cache_creation/cache_read`), duration, dispatch-site attribution, subagent_type, model, and tool_stats. Six jq cookbook recipes added so finding the biggest token consumers is tractable instead of guessing.
+
+**Trigger:** A real 2-day /masterplan-heavy session on a non-trivial codebase consumed $487 with **94% Opus** ($458) vs 5% Sonnet ($26) vs 1% Haiku ($2). Completely inverted from the design intent. Investigation found that ~15 dispatch sites all said the right thing in narrative prose but never told the orchestrator to pass `model:` as a structural Agent-tool parameter. The follow-on observation: even with the contract in place, finding the NEXT cost driver requires per-dispatch visibility — hence the hook upgrade.
+
+**Changes:**
+
+- **`commands/masterplan.md`:**
+  - Added `### Agent dispatch contract` subsection (normative MUST + value-by-use table + Codex exemption + recursive-application clause + telemetry-capture clause + dispatch-site tag table) under `## Subagent and context-control architecture`, between the existing "Model selection guide" and "Briefing rules — the bounded brief".
+  - 14 inline dispatch sites updated with explicit `model: "haiku"` / `model: "sonnet"` parameters: Step A status parse, Step B0 worktree scan, Step C step 1 eligibility cache, Step C step 2 wave dispatch, Step C step 2 SDD invocation (with model-passthrough override clause), Step C 3a Codex EXEC (exempt), Step C 4b Codex REVIEW (exempt), Step I1 discovery, Step I3.2 fetch (per-candidate haiku/sonnet/no-Agent), Step I3.4 conversion, Step S1 situation gather, Step R2 retro source, Step D doctor checks, Completion-state inference.
+  - Step C blocker re-engagement gate's option 2 ("Re-dispatch with a stronger model") now structurally re-dispatches with `model: "opus"` — was a UI-only promise.
+  - Doctor check #19 (orphan subagents file) added; #12 extended to also catch `<slug>-subagents.jsonl > 5 MB`.
+  - Step D parallelization brief updated from "all 18 checks" to "all 19 checks".
+  - DISPATCH-SITE tag value table embedded in the contract section enumerating the per-step tag values (Step A frontmatter parse / Step B0 related-plan scan / etc., 14 sites).
+- **`hooks/masterplan-telemetry.sh`:** added ~120 lines — section 8 of the hook parses the parent transcript at end-of-turn, builds an in-memory tool_use index from all assistant Agent dispatches, joins with toolUseResult lines beyond cursor, and emits one JSONL record per dispatch to `<plan>-subagents.jsonl`. Cursor file `<plan>-subagents-cursor` stores the last-processed line count for incremental parsing. Records carry: ts, plan, session_id, tool_use_id, agent_id, subagent_type, model, description, dispatch_site (regex-extracted from prompt's first line), status, prompt_chars, prompt_first_line (truncated to 200 chars), duration_ms, total_tokens, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, tool_uses_in_subagent, tool_stats: {bash, edit, read, search, other, lines_added, lines_removed}, result_chars, branch, cwd. Smoke-tested with a 3-dispatch fixture: produces correct records, advances cursor (6 lines → 8 lines after appending two more transcript lines), idempotent on re-run.
+- **`docs/design/telemetry-signals.md`:** removed v2.2.4's `dispatch_models` field from the per-turn record schema; added new `## Subagent dispatch records (v2.3.0+)` section with full record shape + field semantics; added new `## Subagent dispatch jq recipes (v2.3.0+)` section with 6 jq cookbook recipes (top-N most expensive single dispatches, per-subagent_type aggregates, per-dispatch-site aggregates, per-model breakdown by site for §Agent dispatch contract verification, anomaly detection at >2σ, cost trend over 14 days).
+- **`docs/internals.md`:** doctor table extended to 19 rows (#19 orphan subagents file); #12 entry extended; Step D parallelization brief count updated 18→19.
+- **`.claude-plugin/plugin.json`** + **`marketplace.json`:** version 2.2.3 → 2.3.0.
+- **`README.md`:** Current-release line bumped to v2.3.0.
+- **`CHANGELOG.md`:** single `[2.3.0]` block describing both threads — added/fixed/migration-notes/verification per Keep a Changelog.
+
+**Key decisions (the why):**
+
+- **One release, not two.** v2.2.4 was prepared but never published (user picked "Don't commit — review first" at the prior plan's exit). Folding the per-subagent telemetry work into v2.3.0 collapses what would have been two consecutive releases into one minor bump. CHANGELOG narrative covers both threads under v2.3.0.
+- **Deprecate `dispatch_models` (v2.2.4 was prepared but never published).** The new `<plan>-subagents.jsonl` is more granular and authoritative than the per-turn aggregate counter. Single source of truth. Nobody had built on `dispatch_models` yet (it never shipped). The contract section's "Telemetry counter" paragraph is replaced with a "Telemetry capture" paragraph pointing at the new file.
+- **Central DISPATCH-SITE tag table over 14 inline brief edits.** The contract section is already the single source of truth for dispatch decisions. Adding the per-step tag values to that section's table avoids duplicating the requirement at every dispatch site. Risk: orchestrator might miss the convention at some sites; mitigation: smoke test reveals null `dispatch_site` records, and we can add per-site reminders later if usage data shows drift.
+- **Cursor-based incremental parsing.** A long-running session's transcript can grow to 80 MB. Re-parsing the entire file every Stop turn is wasteful. The cursor file (`<slug>-subagents-cursor`) stores the last-processed line count; subsequent turns only emit records for new toolUseResult lines beyond the cursor. The tool_use index still requires scanning the entire file (a tool_use earlier than cursor can pair with a toolUseResult after cursor for long-running subagents), but jq slurps that fast.
+- **Recursive override at SDD invocation, not wrap-SDD-in-outer-Agent.** SDD runs as a skill in the orchestrator's context; wrapping it in an outer Agent dispatch creates an additional indirection layer for marginal benefit. The override clause asks SDD to add `model: "sonnet"` to its inner Task calls — this is the cheapest mitigation that doesn't depend on modifying upstream `obra/superpowers`. Risk-mitigation branch documented: if SDD's template structure ignores the override on a future upstream change, fall back to wrapping.
+- **Minor version bump (2.2.3 → 2.3.0).** Substantial new capability (per-subagent telemetry) + behavioral change (model: now structurally required) + new file `<plan>-subagents.jsonl` + new doctor check #19. Minor fits per semver. No status frontmatter change, no config schema change.
+
+**Verification:**
+
+- 10 grep discriminators per the v2.3.0 plan: contract section landed once; ≥14 `model: "..."` parameters in `commands/masterplan.md`; ≥2 Codex-exempt notes; opus-on-blocker structural wire-up; `<plan>-subagents.jsonl` referenced in hook; ≥14 DISPATCH-SITE values in the contract table; doctor table 19 rows + Step D brief at "all 19 checks"; `dispatch_models` references = 0 (deprecated); subagent dispatch schema + 6 jq recipes in `docs/design/telemetry-signals.md`; version 2.3.0 in CHANGELOG/README/plugin.json/marketplace.json.
+- `claude plugin validate .` — clean.
+- `bash -n hooks/masterplan-telemetry.sh` — clean.
+- **First runtime smoke test for the project:** hand-crafted JSONL fixture with three Agent dispatches (haiku Explore, sonnet general-purpose, codex:codex-rescue) verifies the hook emits exactly 3 records with correct model/duration/tokens/dispatch_site, cursor advances to 6, idempotent on re-run, and 4th record only emerges after appending a new dispatch to the transcript (cursor advances to 8). Documented in §13 recipe pattern.
+
+**Verification gaps (carried as v2.3.x followups):**
+
+- **First-user smoke not yet performed against a real plan.** Markdown-only project; the orchestrator IS the prompt. The `<plan>-subagents.jsonl` file on the first user-driven `/masterplan execute` will confirm whether the contract + DISPATCH-SITE tagging fire correctly. Acceptance criteria: ratio of `opus_tokens / total_tokens` < 0.1 over ≥ 5 turns; `dispatch_site` populated on ≥ 90% of records (null only for non-/masterplan dispatches that bypassed the contract).
+- **SDD override clause may not propagate.** If `superpowers:subagent-driven-development` upstream evolves in a way that ignores or overrides the orchestrator's brief at sub-step boundaries, the override has no effect. Mitigation: smoke-verify on first user run via per-model breakdown by site (recipe #4); fall back to wrapping SDD in an outer `Agent(subagent_type: "general-purpose", model: "sonnet", ...)` if needed.
+- **Hard-pinned short names** (`"haiku"` / `"sonnet"` / `"opus"`). Confirmed valid by plugin-dev SKILL docs at v2.3.0 release time. If Anthropic deprecates these aliases, the contract section is the single place to update.
+- **macOS hook smoke.** Linux-only smoke verified. Hook is portable-by-construction (no GNU-only flags; uses `wc -l`, `cat`, `awk`, `jq`, portable `stat -c '%Y' || stat -f '%m'`); deferred until a macOS env is available.
+- **JSONL schema fragility.** The hook depends on the exact shape of `toolUseResult.usage`, `agentId`, `agentType`, etc. If Claude Code's transcript format changes upstream, the hook breaks. The smoke-test fixture is the canary — re-run after any upstream Claude Code update.
+- All v2.2.0 / v2.2.1 / v2.2.2 / v2.2.3 followups still apply.
+
+**Known followups (post-v2.3.0):**
+
+- **Doctor check candidate** — surface `<plan>-subagents.jsonl` records with `dispatch_site == null` count > N as a Warning (DISPATCH-SITE tag drift detector). Niche; defer until usage data shows the central-table approach is or isn't sufficient.
+- **Cross-plan cost dashboard.** Each plan's `<plan>-subagents.jsonl` is per-plan. A cross-plan aggregator (e.g., `/masterplan status --cost`) would let the user compare token spend across in-flight plans. Defer; depends on first-user runtime data.
+- **Per-token cost calculation.** Cookbook recipes report token COUNTS; converting to dollars requires a rate-card mapping that drifts with Anthropic's pricing. Defer until cost reporting is a clearer requirement; tokens are a reliable proxy.
+- **PreToolUse hook for real-time Agent capture.** Stop-hook-based capture is at end-of-turn. Real-time would require PreToolUse + PostToolUse hooks per Agent dispatch. End-of-turn is fine for analysis; defer.
+- **Auto-archive when plan completes.** When `status: complete`, the subagents file could move to `<archive_path>/<date>/<slug>-subagents-final.jsonl`. Niche; defer.
+- All v2.2.x followups still apply (SessionStart hook redundancy, blocker-gate option-pick telemetry, etc.).
+
+**Branch state at end of v2.3.0:**
+
+- 1 commit ahead of v2.2.3 on `main` (this release commit, folding the prepared-but-unpublished v2.2.4 work into v2.3.0).
+- Tag `v2.3.0` to be created locally; pushed alongside the commit per release convention.
+- Working tree clean post-commit.
+- plugin.json: 2.3.0. marketplace.json: 2.3.0 (both nested + top-level).
