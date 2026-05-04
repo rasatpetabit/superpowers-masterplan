@@ -1,7 +1,7 @@
 {
   "name": "superpowers-masterplan",
-  "version": "2.2.0",
-  "description": "Brainstorm → plan → execute development workflow for Claude Code with explicit phase + operation verbs (full / brainstorm / plan / execute / retro / import / doctor / status). v2.0.0+: intra-plan parallelism Slice α (read-only parallel waves via parallel-group: annotation), Codex defaults on (auto-routing + auto-review, with graceful degrade if codex plugin missing). v2.1.0+: gated→loose switch offer for long plans. v2.2.0+: two-tier no-args picker; the kickoff verb is `full` (was `new`). Designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint (18 checks), self-paced cross-session loops.",
+  "version": "2.2.1",
+  "description": "Brainstorm → plan → execute development workflow for Claude Code with explicit phase + operation verbs (full / brainstorm / plan / execute / retro / import / doctor / status). v2.0.0+: intra-plan parallelism Slice α (read-only parallel waves via parallel-group: annotation), Codex defaults on (auto-routing + auto-review, with graceful degrade if codex plugin missing). v2.1.0+: gated→loose switch offer for long plans. v2.2.0+: two-tier no-args picker; the kickoff verb is `full` (was `new`). v2.2.1+: bare `/masterplan` opens with an inline status orientation (in-flight plans + cheap doctor-tripwire flag) before the picker. Designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint (18 checks), self-paced cross-session loops.",
   "author": {
     "name": "Richard A Steenbergen",
     "email": "ras@petabitscale.com"
