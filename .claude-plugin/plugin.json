@@ -1,15 +1,15 @@
 {
-  "name": "claude-superflow",
+  "name": "superpowers-masterplan",
   "version": "1.0.0",
   "description": "Brainstorm → plan → execute development workflow for Claude Code with explicit phase + operation verbs (new / brainstorm / plan / execute / retro / import / doctor / status), designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint, Codex routing, self-paced loops.",
   "author": {
     "name": "Richard A Steenbergen",
     "email": "ras@petabitscale.com"
   },
-  "homepage": "https://github.com/rasatpetabit/claude-superflow",
+  "homepage": "https://github.com/rasatpetabit/superpowers-masterplan",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rasatpetabit/claude-superflow.git"
+    "url": "https://github.com/rasatpetabit/superpowers-masterplan.git"
   },
   "license": "MIT",
   "keywords": [
