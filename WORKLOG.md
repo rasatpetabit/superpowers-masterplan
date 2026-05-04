@@ -179,6 +179,50 @@ Pre-v2.0.0 entries were pruned in the v2.0.0 release; institutional knowledge fr
 
 ---
 
+## 2026-05-04 — Step M0 inline status + doctor-tripwire preamble
+
+**Scope:** Bare `/masterplan` now emits a structured orientation block before the Tier-1 picker fires.
+
+**Changes:**
+
+- **`commands/masterplan.md`:** new `### Step M0 — Inline status orientation` section inserted before `### Tier 1`. M0 enumerates plans across worktrees (parallel Bash glob over `git_state.worktrees`, bounded at 20), reads frontmatter inline (no Haiku — bounded count), runs 7 cheap tripwire checks against data already in memory (#2/#3/#4/#5/#6/#9/#10), emits a 1-line headline + up-to-3 plan bullets + optional `… and N more` tail + optional `· <K> issue(s) detected` flag, then fires Tier-1. Caches the parsed list in `step_m_plans_cache` for Step A reuse. Updated the verb routing table at line 60 to read "Step M0 → Step M". Updated the "Stay on script" guardrail at line 292 to acknowledge the structured preamble while reaffirming the no-tangents rule and adding "do NOT enumerate which doctor checks tripped — that's `/masterplan doctor`'s job."
+- **Step A short-circuit:** new step 0 — if `step_m_plans_cache` is populated (Resume in-flight pick), skip the worktree scan + Haiku dispatch and use the cache directly. Avoids redundant scanning.
+- **`docs/internals.md` Step 11 mirror:** routing table cell updated to "Step M0 → Step M"; new paragraph under "Bare `/masterplan` picker" describing M0's behavior + tripwire scope + cache.
+- **CHANGELOG.md `[Unreleased]`:** added an `### Added` block describing M0 and the tripwire scope.
+
+**Key decisions (the why):**
+
+- **7 cheap checks, not all 18.** M0 runs on every bare `/masterplan` invocation; the latency budget is small. The 7 chosen checks (#2/#3/#4/#5/#6/#9/#10) are all derivable from data already in memory after the worktree scan + frontmatter parse — no extra subprocesses beyond one parallel `test -f` batch. The other 11 doctor checks (orphan plan files, archive files, telemetry growth, parallel-group invariants, codex-config) need separate enumeration that doesn't pay back at the bare-invocation latency budget. M0 is deliberately a tripwire, not a lint pass — it counts, doesn't enumerate. `/masterplan doctor` is still the canonical lint surface.
+- **Headline + top-3 bullets, not headline-only.** The user explicitly asked for "where we're at in them" — a per-plan `current_task` + age payload satisfies that. Capping at 3 bullets keeps the preamble under one screen even on busy repos; truncation tail (`… and N more`) routes the user to "Resume in-flight" for the full list.
+- **`No active plans.` empty-state line.** Always emit a one-liner so the user knows the scan ran. Slightly chattier than skipping but reassures the user that "no plans" is a real fact, not a missed scan. Picked over "skip preamble entirely" by user choice.
+- **`step_m_plans_cache` reused by Step A, not parallel re-scan.** The cache writes once in M0; Step A reads-only. Keeps a single canonical scan per turn. Cache is transient — discarded at end-of-turn — so it doesn't pollute later cross-session resumes.
+- **Updated "Stay on script" instead of inventing a new guardrail.** The line-292 paragraph already permitted "a one-line orientation"; M0's structured preamble is a permitted extension, not a new license. Reframing the existing guardrail (and explicitly forbidding per-check enumeration in the preamble) prevents future model drift more reliably than a separate guardrail elsewhere.
+- **No new doctor check #19.** M0's tripwire reuses existing checks #2/#3/#4/#5/#6/#9/#10 by name + semantics. Doctor table size stays at 18; Step D's parallelization brief still says "all 18 checks." Per CLAUDE.md anti-pattern #5, the three sync'd verb-routing locations remain aligned (M0 is a sub-step of M, not a new verb — frontmatter `description:` and reserved-verbs warning unchanged).
+
+**Verification:**
+
+- `grep -n "Step M0" commands/masterplan.md docs/internals.md` should return ≥3 matches (M0 section header, Stay-on-script reference, internals mirror paragraph).
+- `grep -n "step_m_plans_cache" commands/masterplan.md` should return ≥2 (M0 step 6, Step A step 0).
+- Doctor table count unchanged: 18 rows. Step D parallelization brief still says "all 18 checks."
+- `bash -n hooks/masterplan-telemetry.sh` clean. JSON validation on `.claude-plugin/plugin.json` clean.
+- Halt-mode discriminator suite re-grep: count should remain unchanged (M0 introduces zero `halt_mode` mentions).
+- Manual smoke runtime test deferred to first user invocation — markdown-only project; the orchestrator IS the prompt. Documented in `docs/internals.md §13` recipe pattern.
+
+**Verification gaps (carried as followups):**
+
+- **First-user smoke not yet performed.** M0's runtime behavior depends on a real bare `/masterplan` invocation against a repo with various plan-state combinations (empty, 1 plan, 5 plans, 1 corrupted plan). Smoke verification deferred to next user-driven invocation.
+- **Cache-hit path in Step A not yet smoke-tested.** The `step_m_plans_cache` short-circuit is markdown logic; runtime behavior depends on the same first-user invocation picking "Resume in-flight" after seeing the M0 preamble.
+- All v2.2.0 followups still apply (canned `$ARGUMENTS` self-tests, macOS hook smoke).
+
+**Branch state at end of this change:**
+
+- 1 commit ahead of v2.2.0 on `main` (after the WORKLOG cleanup commit).
+- Tag deferred — this is an `[Unreleased]` addition, will fold into the next minor bump.
+- Working tree clean post-commit.
+- plugin.json: 2.2.0 (unchanged).
+
+---
+
 ## 2026-05-04 — pre-public-release branch + worktree cleanup
 
 **Scope:** Deleted both stray feature branches and the worktrees holding them, leaving only `main` locally and on origin.
