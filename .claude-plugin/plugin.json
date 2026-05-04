@@ -1,7 +1,7 @@
 {
   "name": "superpowers-masterplan",
-  "version": "1.0.0",
-  "description": "Brainstorm → plan → execute development workflow for Claude Code with explicit phase + operation verbs (new / brainstorm / plan / execute / retro / import / doctor / status), designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint, Codex routing, self-paced loops.",
+  "version": "2.0.0",
+  "description": "Brainstorm → plan → execute development workflow for Claude Code with explicit phase + operation verbs (new / brainstorm / plan / execute / retro / import / doctor / status). v2.0.0 adds intra-plan parallelism Slice α (read-only parallel waves via parallel-group: annotation) and flips Codex defaults to on (auto-routing + auto-review, with graceful degrade if codex plugin missing). Designed around bounded subagents and strict context control so long autonomous runs survive across sessions. Configurable autonomy, worktree management, legacy plan import, doctor lint (18 checks), self-paced cross-session loops.",
   "author": {
     "name": "Richard A Steenbergen",
     "email": "ras@petabitscale.com"
@@ -22,6 +22,8 @@
     "codex",
     "worktrees",
     "automation",
-    "agent"
+    "agent",
+    "parallelism",
+    "intra-plan-parallelism"
   ]
 }
