@@ -1,6 +1,6 @@
 {
   "name": "superpowers-masterplan",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "description": "Brainstorm, plan, execute, resume, import, lint, and retrospect long-running Claude Code work with durable status files and strict context control.",
   "author": {
     "name": "Richard A Steenbergen",
