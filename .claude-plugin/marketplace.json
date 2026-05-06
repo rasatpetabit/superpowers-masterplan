@@ -5,7 +5,7 @@
     "email": "ras@petabitscale.com"
   },
   "description": "Marketplace catalog for the superpowers-masterplan Claude Code plugin.",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "allowCrossMarketplaceDependenciesOn": [
     "claude-plugins-official"
   ],
@@ -14,7 +14,7 @@
       "name": "superpowers-masterplan",
       "source": "./",
       "description": "Brainstorm, plan, execute, resume, import, lint, and retrospect long-running Claude Code work with durable status files.",
-      "version": "2.6.0",
+      "version": "2.7.0",
 
       "author": {
         "name": "Richard A Steenbergen",
