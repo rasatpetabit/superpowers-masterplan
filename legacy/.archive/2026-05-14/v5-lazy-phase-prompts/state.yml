@@ -1,0 +1,39 @@
+schema_version: 2
+slug: v5-lazy-phase-prompts
+status: archived
+phase: archived
+worktree: ""
+worktree_disposition: missing
+branch: ""
+started: "2026-05-13"
+last_activity: "2026-05-13T00:00:00Z"
+current_task: ""
+next_action: "archived — v5.0.0 shipped"
+autonomy: loose
+loop_enabled: false
+codex_routing: auto
+codex_review: on
+compact_loop_recommended: false
+complexity: high
+pending_gate: null
+stop_reason: null
+critical_error: null
+halt_mode: none
+artifacts:
+  spec: docs/masterplan/v5-lazy-phase-prompts/spec.md
+  plan: docs/masterplan/v5-lazy-phase-prompts/plan.md
+  retro: docs/masterplan/v5-lazy-phase-prompts/retro.md
+  events: ""
+  events_archive: ""
+  eligibility_cache: ""
+  telemetry: ""
+  telemetry_archive: ""
+  subagents: ""
+  subagents_archive: ""
+  state_queue: ""
+legacy:
+  source: ""
+  plan: ""
+  spec: ""
+  retro: ""
+  sidecars: {}
