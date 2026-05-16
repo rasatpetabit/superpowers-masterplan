@@ -25,7 +25,7 @@ Pre-v2.0.0 entries were pruned in the v2.0.0 release; institutional knowledge fr
 
 **Subagent return-bytes telemetry:** The `subagent_return_bytes` field on per-subagent JSONL records is the long-missing piece for measuring the user's original context-pollution concern. Detector for new `subagent_return_oversized` class (threshold 5120 bytes = v3.3.0 WORKLOG-regression threshold).
 
-**Commit range:** `80b96d5..<T15-sha>` (T1 first to T15 last; see CHANGELOG v5.8.0 for per-task SHA map).
+**Commit range:** `80b96d5..e82777e` (T1 first to T15 last; see CHANGELOG v5.8.0 for per-task SHA map).
 
 **Notes for future maintainers:**
 
